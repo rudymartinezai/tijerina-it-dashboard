@@ -1,47 +1,36 @@
 <!doctype html>
 <html lang="en">
   <meta charset="utf-8">
-  <title>Chart Test 2</title>
+  <title>SVG Chart Test</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <!-- put Recharts AFTER ReactDOM -->
-  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 
   <body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div id="root" class="w-full max-w-3xl h-96"></div>
+    <div id="root"></div>
 
     <script>
-      const rootEl = document.getElementById("root");
-      const root = ReactDOM.createRoot(rootEl);
-      const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = window.Recharts;
+      const root = ReactDOM.createRoot(document.getElementById('root'));
 
-      const data = [
-        { name: "P1", count: 3 },
-        { name: "P2", count: 6 },
-        { name: "P3", count: 10 },
-        { name: "P4", count: 4 }
-      ];
+      const data = [3, 6, 10, 4];
+      const max = Math.max(...data);
 
       const chart = React.createElement(
-        "div",
-        { className: "bg-white p-6 rounded-xl shadow-lg" },
-        React.createElement("h1", { className: "text-xl font-bold mb-4 text-blue-600" }, "Bar Chart Sanity Check"),
+        'div',
+        { className: 'bg-white p-8 rounded-xl shadow-lg text-center' },
+        React.createElement('h1', { className: 'text-xl font-bold text-blue-600 mb-4' }, 'SVG Chart (No Libraries)'),
         React.createElement(
-          "div",
-          { className: "w-full h-64" },
-          React.createElement(
-            ResponsiveContainer,
-            { width: "100%", height: "100%" },
-            React.createElement(
-              BarChart,
-              { data },
-              React.createElement(CartesianGrid, { strokeDasharray: "3 3" }),
-              React.createElement(XAxis, { dataKey: "name" }),
-              React.createElement(YAxis, null),
-              React.createElement(Tooltip, null),
-              React.createElement(Bar, { dataKey: "count", fill: "#3b82f6" })
-            )
+          'svg',
+          { width: 300, height: 150, className: 'mx-auto' },
+          data.map((val, i) =>
+            React.createElement('rect', {
+              key: i,
+              x: i * 70 + 20,
+              y: 140 - (val / max) * 100,
+              width: 40,
+              height: (val / max) * 100,
+              fill: '#3b82f6'
+            })
           )
         )
       );
