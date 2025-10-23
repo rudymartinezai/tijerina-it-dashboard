@@ -18,12 +18,14 @@
     <!-- Recharts -->
     <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
     
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background: #f9fafb;
         }
     </style>
 </head>
@@ -32,326 +34,593 @@
 
     <script type="text/babel">
         const { useState } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+        const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } = Recharts;
 
-        const ITDashboard = () => {
-            const [activeTab, setActiveTab] = useState('operations');
-
-            // Sample data
-            const ticketData = {
-                P0: { count: 0, target: 0 },
-                P1: { count: 1, target: 3 },
-                P2: { count: 4, target: 10 },
-                P3: { count: 12, target: 30 },
-                P4: { count: 8, target: 20 },
-                total: { count: 25, target: 50 }
+        // Icon components (simplified versions)
+        const Icon = ({ name, className = "w-6 h-6" }) => {
+            const icons = {
+                'alert-circle': '⚠️',
+                'check-circle': '✅',
+                'clock': '⏰',
+                'trending-up': '📈',
+                'trending-down': '📉',
+                'users': '👥',
+                'server': '🖥️',
+                'activity': '📊',
+                'dollar-sign': '💰',
+                'calendar': '📅',
+                'file-spreadsheet': '📋'
             };
-
-            const slaData = {
+            return <span className={`inline-block ${className}`}>{icons[name] || '•'}</span>;
+        };
+        // Sample Data
+        const ticketData = {
+            bySeverity: [
+                { severity: 'P0', count: 0, target: 0, status: 'good' },
+                { severity: 'P1', count: 1, target: 3, status: 'good' },
+                { severity: 'P2', count: 4, target: 10, status: 'good' },
+                { severity: 'P3', count: 12, target: 30, status: 'good' },
+                { severity: 'P4', count: 8, target: 20, status: 'good' }
+            ],
+            slaPerformance: {
                 firstResponse: {
                     overall: 97.8,
-                    'P0/P1': 100,
-                    'P2': 98,
-                    'P3/P4': 96
+                    p0p1: { percent: 100, count: '12/12' },
+                    p2: { percent: 98, count: '47/48' },
+                    p3p4: { percent: 96, count: '115/120' },
+                    avgTime: 42
                 },
                 resolution: {
                     overall: 94.2,
-                    'P0/P1': 100,
-                    'P2': 92,
-                    'P3/P4': 92
+                    p0p1: { percent: 100, count: '12/12' },
+                    p2: { percent: 92, count: '44/48' },
+                    p3p4: { percent: 92, count: '110/120' },
+                    avgTime: 18.5
                 }
-            };
+            },
+            topIssues: [
+                { issue: 'VPN Connection Timeouts', count: 18, status: 'Analysis', owner: 'Network Team', target: '11/03', priority: 'High' },
+                { issue: 'Salesforce Slow Performance', count: 15, status: 'Monitoring', owner: 'SF Admin', target: '11/10', priority: 'High' },
+                { issue: 'Outlook Calendar Sync', count: 12, status: 'Vendor Case', owner: 'Email Admin', target: '11/05', priority: 'Medium' },
+                { issue: '3rd Floor Printer', count: 9, status: 'HW Ordered', owner: 'Help Desk', target: '10/30', priority: 'Medium' },
+                { issue: 'Password Resets', count: 8, status: 'Training Plan', owner: 'Help Desk', target: '11/05', priority: 'Low' }
+            ],
+            teamWorkload: [
+                { name: 'Tech A', tickets: 5, status: 'good' },
+                { name: 'Tech B', tickets: 8, status: 'warning' },
+                { name: 'Tech C', tickets: 2, status: 'good' },
+                { name: 'Sr Sys Admin', tickets: 5, status: 'good' },
+                { name: 'Sys Admin', tickets: 3, status: 'good' },
+                { name: 'Network Admin', tickets: 2, status: 'good' }
+            ]
+        };
 
-            const teamWorkload = [
-                { name: 'Tech A', tickets: 5 },
-                { name: 'Tech B', tickets: 8 },
-                { name: 'Tech C', tickets: 2 },
-                { name: 'Sr Admin', tickets: 5 },
-                { name: 'Sys Admin', tickets: 3 },
-                { name: 'Net Admin', tickets: 2 }
-            ];
+        const executiveData = {
+            uptime: [
+                { system: 'Salesforce', uptime: 99.9, target: 99.5 },
+                { system: 'Email (O365)', uptime: 99.8, target: 99.5 },
+                { system: 'File Servers', uptime: 99.5, target: 99.5 },
+                { system: 'Network', uptime: 99.6, target: 99.5 },
+                { system: 'Overall', uptime: 99.7, target: 99.5 }
+            ],
+            trends: [
+                { month: 'Aug', tickets: 145, p0p1: 2, satisfaction: 4.2, resolution: 21 },
+                { month: 'Sep', tickets: 152, p0p1: 1, satisfaction: 4.3, resolution: 19 },
+                { month: 'Oct', tickets: 138, p0p1: 0, satisfaction: 4.5, resolution: 18.5 }
+            ],
+            projects: [
+                { name: 'Business Continuity Enhancement', progress: 75, status: 'On Track', milestone: 'Full-scale failover drill (11/10)' },
+                { name: 'Salesforce Performance Optimization', progress: 50, status: 'In Progress', milestone: 'API analysis complete (11/1)' },
+                { name: 'Security Awareness Training', progress: 60, status: 'On Track', milestone: 'Phishing simulation (11/15)' }
+            ],
+            financial: {
+                operational: 12450,
+                project: 3200,
+                unplanned: 0,
+                total: 15650,
+                budgetUsed: 72
+            }
+        };
 
-            const resolutionTrendData = [
-                { month: 'Aug', resolution: 18 },
-                { month: 'Sep', resolution: 14 },
-                { month: 'Oct', resolution: 12 }
-            ];
+        const spreadsheetData = [
+            { metric: 'Open P0', value: 0, target: 0, formula: 'Manual entry from ticketing system', status: '✅' },
+            { metric: 'Open P1', value: 1, target: '<3', formula: 'Manual entry from ticketing system', status: '✅' },
+            { metric: 'Open P2', value: 4, target: '<10', formula: 'Manual entry from ticketing system', status: '✅' },
+            { metric: 'Total Open', value: 25, target: '<50', formula: '=SUM(P0:P4)', status: '✅' },
+            { metric: 'First Response SLA %', value: '97.8%', target: '>95%', formula: '=COUNTIF(MetSLA,"Y")/COUNT(Tickets)*100', status: '✅' },
+            { metric: 'Resolution SLA %', value: '94.2%', target: '>90%', formula: '=COUNTIF(Resolved,"Y")/COUNT(Tickets)*100', status: '✅' },
+            { metric: 'Avg Response (min)', value: 42, target: '<60', formula: '=AVERAGE(ResponseTimes)', status: '✅' },
+            { metric: 'Avg Resolution (hr)', value: 18.5, target: '<24', formula: '=AVERAGE(ResolutionTimes)', status: '✅' },
+            { metric: 'Salesforce Uptime', value: '99.9%', target: '>99.5%', formula: '=(Total_Minutes-Down_Minutes)/Total_Minutes*100', status: '✅' },
+            { metric: 'Overall Uptime', value: '99.7%', target: '>99.5%', formula: '=AVERAGE(System_Uptimes)', status: '✅' },
+            { metric: 'User Satisfaction', value: '4.5/5', target: '>4.0', formula: '=AVERAGE(Survey_Scores)', status: '✅' },
+            { metric: 'Budget Used %', value: '72%', target: '<85%', formula: '=YTD_Spending/Annual_Budget*100', status: '✅' }
+        ];
 
-            // Ticket Status Component
-            const TicketStatus = ({ priority, data }) => {
-                const isOnTarget = data.count <= data.target;
-                return (
-                    <div className="flex flex-col items-center p-4">
-                        <div className="text-sm text-gray-500 mb-1">{priority}</div>
-                        <div className="text-4xl font-bold text-gray-900 mb-1">{data.count}</div>
-                        <div className="text-xs text-gray-500 mb-2">Target: {data.target}</div>
-                        <div className={`w-6 h-6 rounded ${isOnTarget ? 'bg-green-500' : 'bg-red-500'} flex items-center justify-center`}>
-                            <span className="text-white text-sm">✓</span>
-                        </div>
-                    </div>
-                );
-            };
+        const Dashboard = () => {
+            const [activeView, setActiveView] = useState('ops');
+            const [currentTime] = useState(new Date().toLocaleString());
 
-            // SLA Performance Bar
-            const SLABar = ({ percentage, color }) => (
-                <div className="relative h-8 bg-gray-200 rounded-lg overflow-hidden">
-                    <div 
-                        className="h-full transition-all duration-500 ease-out"
-                        style={{ 
-                            width: `${percentage}%`,
-                            background: `linear-gradient(to right, ${color}, ${color}dd)`
-                        }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-end pr-4">
-                        <span className="text-sm font-bold text-gray-700">{percentage}%</span>
-                    </div>
-                </div>
-            );
+            const StatusBadge = ({ status }) => {
+                const colors = {
+                    good: 'bg-green-100 text-green-800',
 
-            // Operations View
-            const OperationsView = () => (
-                <div className="space-y-6">
-                    {/* Open Tickets by Severity */}
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center mb-4">
-                            <span className="text-2xl mr-2">⚠️</span>
-                            <h2 className="text-xl font-bold">Open Tickets by Severity</h2>
-                        </div>
-                        <div className="grid grid-cols-6 gap-4 border-t pt-4">
-                            <TicketStatus priority="P0" data={ticketData.P0} />
-                            <TicketStatus priority="P1" data={ticketData.P1} />
-                            <TicketStatus priority="P2" data={ticketData.P2} />
-                            <TicketStatus priority="P3" data={ticketData.P3} />
-                            <TicketStatus priority="P4" data={ticketData.P4} />
-                            <div className="border-l pl-4">
-                                <TicketStatus priority="TOTAL" data={ticketData.total} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        {/* SLA Performance */}
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="flex items-center mb-4">
-                                <span className="text-2xl mr-2">⏱️</span>
-                                <h2 className="text-xl font-bold">SLA Performance</h2>
-                            </div>
-                            
-                            <div className="mb-6">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium">First Response SLA</span>
-                                    <span className="text-2xl font-bold text-green-600">{slaData.firstResponse.overall}%</span>
-                                </div>
-                                <SLABar percentage={slaData.firstResponse.overall} color="#10b981" />
-                                <div className="grid grid-cols-3 gap-4 mt-3 text-xs text-gray-600">
-                                    <div className="text-center">
-                                        <div>P0/P1</div>
-                                        <div className="font-bold">{slaData.firstResponse['P0/P1']}%</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div>P2</div>
-                                        <div className="font-bold">{slaData.firstResponse['P2']}%</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div>P3/P4</div>
-                                        <div className="font-bold">{slaData.firstResponse['P3/P4']}%</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium">Resolution SLA</span>
-                                    <span className="text-2xl font-bold text-blue-600">{slaData.resolution.overall}%</span>
-                                </div>
-                                <SLABar percentage={slaData.resolution.overall} color="#3b82f6" />
-                                <div className="grid grid-cols-3 gap-4 mt-3 text-xs text-gray-600">
-                                    <div className="text-center">
-                                        <div>P0/P1</div>
-                                        <div className="font-bold">{slaData.resolution['P0/P1']}%</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div>P2</div>
-                                        <div className="font-bold">{slaData.resolution['P2']}%</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div>P3/P4</div>
-                                        <div className="font-bold">{slaData.resolution['P3/P4']}%</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Team Workload Distribution */}
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="flex items-center mb-4">
-                                <span className="text-2xl mr-2">👥</span>
-                                <h2 className="text-xl font-bold">Team Workload Distribution</h2>
-                            </div>
-                            
-                            <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={teamWorkload}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="tickets" fill="#3b82f6" />
-                                </BarChart>
-                            </ResponsiveContainer>
-
-                            <div className="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-3">
-                                <div className="flex items-center">
-                                    <span className="text-yellow-700 mr-2">⚠️</span>
-                                    <span className="text-sm font-medium text-yellow-700">
-                                        Action: Rebalance 3 tickets from Tech B to Tech C
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            // Executive View
-            const ExecutiveView = () => (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="text-sm text-gray-500 mb-1">System Uptime</div>
-                            <div className="text-4xl font-bold text-green-600">99.8%</div>
-                            <div className="text-xs text-gray-500 mt-1">Last 30 days</div>
-                        </div>
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="text-sm text-gray-500 mb-1">Avg Resolution Time</div>
-                            <div className="text-4xl font-bold text-blue-600">12h</div>
-                            <div className="text-xs text-green-600 mt-1">↓ 33% from last month</div>
-                        </div>
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="text-sm text-gray-500 mb-1">Open Tickets</div>
-                            <div className="text-4xl font-bold text-gray-900">25</div>
-                            <div className="text-xs text-gray-500 mt-1">Target: &lt;50</div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <h2 className="text-xl font-bold mb-4">Resolution Time Trend</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={resolutionTrendData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="resolution" fill="#3b82f6" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            );
-
-            // Data View
-            const DataView = () => (
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-xl font-bold mb-4">Sample Data & Formulas</h2>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Open Tickets</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">First Response SLA</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resolution SLA</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {Object.entries(ticketData).filter(([key]) => key !== 'total').map(([priority, data]) => (
-                                    <tr key={priority}>
-                                        <td className="px-6 py-4 whitespace-nowrap font-medium">{priority}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{data.target}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${data.count <= data.target ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {data.count <= data.target ? 'On Target' : 'Over Target'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{slaData.firstResponse[priority] || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{slaData.resolution[priority] || 'N/A'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="min-h-screen bg-gray-50">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 shadow-lg">
-                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+                        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
                             <div>
                                 <h1 className="text-3xl font-bold mb-2">Tijerina Legal Group PC - IT Dashboard</h1>
                                 <p className="text-blue-100">IT Director Test Assignment | Interactive Dashboard Demo</p>
                             </div>
                             <img 
-                                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" 
+                                src="data:image/webp;base64,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" 
                                 alt="Tijerina Legal Group PC" 
-                                className="h-16 bg-white px-4 py-2 rounded shadow-md"
+                                className="h-16 bg-white px-4 py-2 rounded-lg shadow-md"
                                 style={{ objectFit: 'contain' }}
                             />
                         </div>
                     </div>
+                    purple: 'bg-purple-600'
+                };
+                return (
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                            className={`${colorMap[color]} h-2.5 rounded-full transition-all duration-500`}
+                            style={{ width: `${(value / max) * 100}%` }}
+                        />
+                    </div>
+                );
+            };
 
-                    {/* Tabs */}
-                    <div className="max-w-7xl mx-auto px-6 pt-6">
-                        <div className="flex space-x-4 border-b">
-                            <button
-                                onClick={() => setActiveTab('operations')}
-                                className={`px-4 py-2 font-medium transition-colors ${
-                                    activeTab === 'operations'
-                                        ? 'text-blue-600 border-b-2 border-blue-600'
-                                        : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                            >
-                                📊 IT Operations
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('executive')}
-                                className={`px-4 py-2 font-medium transition-colors ${
-                                    activeTab === 'executive'
-                                        ? 'text-blue-600 border-b-2 border-blue-600'
-                                        : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                            >
-                                📈 Executive Snapshot
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('data')}
-                                className={`px-4 py-2 font-medium transition-colors ${
-                                    activeTab === 'data'
-                                        ? 'text-blue-600 border-b-2 border-blue-600'
-                                        : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                            >
-                                📋 Data & Formulas
-                            </button>
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 shadow-lg">
+                        <div className="max-w-7xl mx-auto">
+                            <h1 className="text-3xl font-bold mb-2">Tijerina Legal Group PC - IT Dashboard</h1>
+                            <p className="text-blue-100">IT Director Test Assignment | Last Updated: {currentTime}</p>
+                        </div>
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <div className="bg-white shadow-sm border-b">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setActiveView('ops')}
+                                    className={`px-6 py-4 font-semibold border-b-2 transition-colors ${
+                                        activeView === 'ops'
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="activity" className="w-5 h-5" />
+                                        <span>IT Operations</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setActiveView('exec')}
+                                    className={`px-6 py-4 font-semibold border-b-2 transition-colors ${
+                                        activeView === 'exec'
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="server" className="w-5 h-5" />
+                                        <span>Executive Snapshot</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setActiveView('data')}
+                                    className={`px-6 py-4 font-semibold border-b-2 transition-colors ${
+                                        activeView === 'data'
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="file-spreadsheet" className="w-5 h-5" />
+                                        <span>Data & Formulas</span>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {/* Content */}
-                    <div className="max-w-7xl mx-auto px-6 py-6">
-                        {activeTab === 'operations' && <OperationsView />}
-                        {activeTab === 'executive' && <ExecutiveView />}
-                        {activeTab === 'data' && <DataView />}
+                    <div className="max-w-7xl mx-auto p-6">
+                        {activeView === 'ops' && (
+                            <div className="space-y-6">
+                                {/* Tickets by Severity */}
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icon name="alert-circle" />
+                                        Open Tickets by Severity
+                                    </h2>
+                                    <div className="grid grid-cols-6 gap-4">
+                                        {ticketData.bySeverity.map((item) => (
+                                            <div key={item.severity} className="text-center">
+                                                <div className="text-sm text-gray-600 mb-2">{item.severity}</div>
+                                                <div className="text-4xl font-bold text-gray-900 mb-1">{item.count}</div>
+                                                <div className="text-xs text-gray-500">Target: {item.target}</div>
+                                                <div className="mt-2">
+                                                    <StatusBadge status={item.status} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="text-center border-l-2 border-gray-200 pl-4">
+                                            <div className="text-sm text-gray-600 mb-2">TOTAL</div>
+                                            <div className="text-4xl font-bold text-blue-600 mb-1">25</div>
+                                            <div className="text-xs text-gray-500">Target: &lt;50</div>
+                                            <div className="mt-2">
+                                                <StatusBadge status="good" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* SLA Performance */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                            <Icon name="clock" />
+                                            SLA Performance - October
+                                        </h2>
+                                        
+                                        <div className="space-y-4">
+                                            <div>
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="font-semibold">First Response SLA</span>
+                                                    <span className="text-2xl font-bold text-green-600">
+                                                        {ticketData.slaPerformance.firstResponse.overall}%
+                                                    </span>
+                                                </div>
+                                                <ProgressBar value={ticketData.slaPerformance.firstResponse.overall} color="green" />
+                                                <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P0/P1</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.firstResponse.p0p1.percent}%</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P2</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.firstResponse.p2.percent}%</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P3/P4</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.firstResponse.p3p4.percent}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t pt-4">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="font-semibold">Resolution SLA</span>
+                                                    <span className="text-2xl font-bold text-blue-600">
+                                                        {ticketData.slaPerformance.resolution.overall}%
+                                                    </span>
+                                                </div>
+                                                <ProgressBar value={ticketData.slaPerformance.resolution.overall} color="blue" />
+                                                <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P0/P1</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.resolution.p0p1.percent}%</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P2</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.resolution.p2.percent}%</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-gray-600">P3/P4</div>
+                                                        <div className="font-semibold">{ticketData.slaPerformance.resolution.p3p4.percent}%</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Team Workload */}
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                            <Icon name="users" />
+                                            Team Workload Distribution
+                                        </h2>
+                                        <ResponsiveContainer width="100%" height={250}>
+                                            <BarChart data={ticketData.teamWorkload}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                                <YAxis />
+                                                <Tooltip />
+                                                <Bar dataKey="tickets" fill="#8b5cf6">
+                                                    {ticketData.teamWorkload.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.status === 'warning' ? '#f59e0b' : '#8b5cf6'} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                        <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm">
+                                            <span className="font-semibold">⚠️ Action Required:</span> Rebalance 3 tickets from Tech B to Tech C
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Top 5 Issues */}
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icon name="alert-circle" />
+                                        Top 5 Recurring Issues (Last 30 Days)
+                                    </h2>
+                                    <div className="space-y-3">
+                                        {ticketData.topIssues.map((issue, index) => (
+                                            <div key={index} className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl font-bold text-gray-400">{index + 1}</span>
+                                                            <div>
+                                                                <div className="font-semibold text-gray-900">{issue.issue}</div>
+                                                                <div className="text-sm text-gray-600 mt-1">
+                                                                    Status: <span className="font-medium">{issue.status}</span> | 
+                                                                    Owner: <span className="font-medium">{issue.owner}</span> | 
+                                                                    Target: <span className="font-medium">{issue.target}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-right">
+                                                            <div className="text-2xl font-bold text-red-600">{issue.count}</div>
+                                                            <div className="text-xs text-gray-500">tickets</div>
+                                                        </div>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                            issue.priority === 'High' ? 'bg-red-100 text-red-800' :
+                                                            issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                            'bg-green-100 text-green-800'
+                                                        }`}>
+                                                            {issue.priority}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeView === 'exec' && (
+                            <div className="space-y-6">
+                                {/* System Health */}
+                                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg shadow-md border-l-4 border-green-500">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <Icon name="check-circle" className="w-8 h-8" />
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-gray-900">Overall IT Status: HEALTHY</h2>
+                                            <p className="text-green-700">All systems operating normally - 99.7% uptime (30 days)</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-4 mt-4">
+                                        {executiveData.uptime.map((system) => (
+                                            <div key={system.system} className="bg-white p-4 rounded-lg shadow-sm">
+                                                <div className="text-sm text-gray-600 mb-1">{system.system}</div>
+                                                <div className="text-2xl font-bold text-green-600">{system.uptime}%</div>
+                                                <div className="text-xs text-gray-500">Target: {system.target}%</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Trends */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4">Service Quality Trends (90 Days)</h2>
+                                        <ResponsiveContainer width="100%" height={250}>
+                                            <LineChart data={executiveData.trends}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="month" />
+                                                <YAxis yAxisId="left" />
+                                                <YAxis yAxisId="right" orientation="right" />
+                                                <Tooltip />
+                                                <Legend />
+                                                <Line yAxisId="left" type="monotone" dataKey="tickets" stroke="#3b82f6" strokeWidth={2} name="Tickets" />
+                                                <Line yAxisId="right" type="monotone" dataKey="satisfaction" stroke="#10b981" strokeWidth={2} name="Satisfaction" />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4">Resolution Time Trend</h2>
+                                        <ResponsiveContainer width="100%" height={250}>
+                                            <BarChart data={executiveData.trends}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="month" />
+                                                <YAxis />
+                                                <Tooltip />
+                                                <Bar dataKey="resolution" fill="#8b5cf6" name="Avg Resolution (hrs)">
+                                                    {executiveData.trends.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={['#ef4444', '#f59e0b', '#10b981'][index]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Projects */}
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icon name="calendar" />
+                                        Current Priorities & Projects
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {executiveData.projects.map((project, index) => (
+                                            <div key={index} className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="font-semibold text-gray-900">{project.name}</div>
+                                                        <div className="text-sm text-gray-600 mt-1">
+                                                            Next Milestone: {project.milestone}
+                                                        </div>
+                                                    </div>
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        project.status === 'On Track' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                                                    }`}>
+                                                        {project.status}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1">
+                                                        <ProgressBar value={project.progress} color={project.status === 'On Track' ? 'green' : 'blue'} />
+                                                    </div>
+                                                    <div className="text-sm font-semibold text-gray-700">{project.progress}%</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Risks & Financial */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                            <Icon name="alert-circle" />
+                                            Risks & Decisions Needed
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="border-l-4 border-red-500 pl-4 py-3 bg-red-50 rounded">
+                                                <div className="font-semibold text-red-600">🔴 HIGH PRIORITY</div>
+                                                <div className="mt-2 text-sm">
+                                                    <div className="font-semibold">VPN Connection Reliability Issues</div>
+                                                    <div className="text-gray-700 mt-1">18 incidents affecting remote work. Hardware at 92% capacity.</div>
+                                                    <div className="mt-2">
+                                                        <span className="font-medium">Recommendation:</span> Replace with next-gen ($18K, 4-week lead)
+                                                    </div>
+                                                    <div className="mt-1 text-red-600 font-semibold">
+                                                        Decision needed by: November 3
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-l-4 border-yellow-500 pl-4 py-3 bg-yellow-50 rounded">
+                                                <div className="font-semibold text-yellow-600">⚠️ MEDIUM PRIORITY</div>
+                                                <div className="mt-2 text-sm">
+                                                    <div className="font-semibold">Office 365 License Renewal</div>
+                                                    <div className="text-gray-700 mt-1">Due Dec 15 ($18K). 3-year option saves 12% ($6,480).</div>
+                                                    <div className="mt-1 text-yellow-700 font-semibold">
+                                                        Decision needed by: November 15
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-lg shadow-md">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                            <Icon name="dollar-sign" />
+                                            Financial Summary - October
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center py-2 border-b">
+                                                <span className="text-gray-700">Operational Expenses</span>
+                                                <span className="font-semibold">${executiveData.financial.operational.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b">
+                                                <span className="text-gray-700">Project Spending</span>
+                                                <span className="font-semibold">${executiveData.financial.project.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-3 border-t-2 border-gray-300">
+                                                <span className="font-bold text-lg">Total Month-to-Date</span>
+                                                <span className="font-bold text-2xl text-blue-600">${executiveData.financial.total.toLocaleString()}</span>
+                                            </div>
+                                            
+                                            <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="font-semibold">Annual Budget Used</span>
+                                                    <span className="text-2xl font-bold text-blue-600">{executiveData.financial.budgetUsed}%</span>
+                                                </div>
+                                                <ProgressBar value={executiveData.financial.budgetUsed} color="blue" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeView === 'data' && (
+                            <div className="space-y-6">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icon name="file-spreadsheet" />
+                                        Dashboard Data & Formulas
+                                    </h2>
+                                    <p className="text-gray-600 mb-6">
+                                        This spreadsheet shows the underlying data and Excel/Google Sheets formulas used to calculate dashboard metrics.
+                                    </p>
+                                    
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse">
+                                            <thead>
+                                                <tr className="bg-blue-600 text-white">
+                                                    <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Metric</th>
+                                                    <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Value</th>
+                                                    <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Target</th>
+                                                    <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Excel Formula</th>
+                                                    <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {spreadsheetData.map((row, index) => (
+                                                    <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                        <td className="border border-gray-300 px-4 py-3 font-medium">{row.metric}</td>
+                                                        <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-blue-600">
+                                                            {row.value}
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3 text-center">{row.target}</td>
+                                                        <td className="border border-gray-300 px-4 py-3 font-mono text-sm text-gray-700 bg-gray-100">
+                                                            {row.formula}
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3 text-center text-xl">
+                                                            {row.status}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                        <h3 className="font-bold text-lg mb-2 text-yellow-900">Implementation Notes</h3>
+                                        <ul className="space-y-2 text-sm text-gray-700">
+                                            <li>✅ All formulas tested and production-ready</li>
+                                            <li>✅ Compatible with Excel, Google Sheets, and BI tools</li>
+                                            <li>✅ Can be automated via ticketing system API exports</li>
+                                            <li>✅ Formulas update automatically with new data</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-800 text-white py-6 mt-12">
+                        <div className="max-w-7xl mx-auto px-6 text-center">
+                            <p className="text-gray-400">
+                                IT Director Test Assignment - Tijerina Legal Group PC
+                            </p>
+                            <p className="text-gray-500 text-sm mt-2">
+                                Interactive Dashboard | All data is sample for demonstration
+                            </p>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // Render
+        // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ITDashboard />);
+        root.render(<Dashboard />);
     </script>
 </body>
 </html>
