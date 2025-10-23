@@ -15,6 +15,67 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
             background: #f9fafb;
         }
+        
+        /* CSS Chart Styles */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            gap: 10px;
+            padding: 20px 0;
+        }
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #8b5cf6, #a78bfa);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 40px;
+        }
+        .bar:hover {
+            opacity: 0.8;
+            transform: translateY(-5px);
+        }
+        .bar-label {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 8px;
+            color: #6b7280;
+        }
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .line-chart {
+            height: 200px;
+            position: relative;
+            padding: 20px 0;
+        }
+        .line-path {
+            stroke: #3b82f6;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .line-path-2 {
+            stroke: #10b981;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .chart-grid {
+            stroke: #e5e7eb;
+            stroke-width: 1;
+        }
+        
         #loading {
             display: flex;
             flex-direction: column;
@@ -37,66 +98,24 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .error {
-            color: #dc2626;
-            padding: 20px;
-            max-width: 600px;
-            margin: 20px auto;
-            background: #fee2e2;
-            border-radius: 8px;
-            border: 1px solid #dc2626;
-        }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="spinner"></div>
         <div>Loading Dashboard...</div>
-        <div style="font-size: 14px; color: #6b7280; margin-top: 10px;">This may take a few seconds</div>
     </div>
-    <div id="error" style="display: none;"></div>
     <div id="root"></div>
 
-    <!-- Load libraries in correct order -->
+    <!-- Only load React - no Recharts needed! -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
 
     <script type="text/babel">
-        // Check if libraries loaded
-        function checkLibraries() {
-            const missing = [];
-            if (typeof React === 'undefined') missing.push('React');
-            if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
-            if (typeof Recharts === 'undefined') missing.push('Recharts');
-            
-            if (missing.length > 0) {
-                document.getElementById('loading').style.display = 'none';
-                const errorDiv = document.getElementById('error');
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `
-                    <div class="error">
-                        <h2>Error Loading Dashboard</h2>
-                        <p>The following libraries failed to load: ${missing.join(', ')}</p>
-                        <p>Please check your internet connection and refresh the page.</p>
-                        <button onclick="location.reload()" style="background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                            Retry
-                        </button>
-                    </div>
-                `;
-                return false;
-            }
-            return true;
-        }
-
-        // Wait for everything to load
         setTimeout(() => {
-            if (!checkLibraries()) return;
-
             try {
                 const { useState } = React;
-                const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } = Recharts;
 
                 // Sample Data
                 const ticketData = {
@@ -156,6 +175,97 @@
                     { metric: 'User Satisfaction', value: '4.5/5', target: '>4.0', formula: '=AVERAGE(Survey_Scores)', status: '✅' },
                     { metric: 'Budget Used %', value: '72%', target: '<85%', formula: '=YTD_Spend/Annual_Budget*100', status: '✅' }
                 ];
+
+                // CSS-based Bar Chart Component
+                const BarChart = ({ data }) => {
+                    const maxValue = Math.max(...data.map(d => d.tickets));
+                    return (
+                        <div className="bar-chart">
+                            {data.map((item, idx) => (
+                                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div 
+                                        className="bar" 
+                                        style={{ 
+                                            height: `${(item.tickets / maxValue) * 180}px`,
+                                            background: item.tickets > 6 ? 'linear-gradient(to top, #f59e0b, #fbbf24)' : 'linear-gradient(to top, #8b5cf6, #a78bfa)'
+                                        }}
+                                    >
+                                        <div className="bar-value">{item.tickets}</div>
+                                    </div>
+                                    <div className="bar-label">{item.name}</div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                };
+
+                // CSS-based Line Chart Component
+                const LineChart = ({ data }) => {
+                    const width = 400;
+                    const height = 180;
+                    const padding = 20;
+                    
+                    // Normalize ticket data
+                    const maxTickets = Math.max(...data.map(d => d.tickets));
+                    const minTickets = Math.min(...data.map(d => d.tickets));
+                    const ticketsRange = maxTickets - minTickets;
+                    
+                    const points = data.map((d, i) => {
+                        const x = padding + (i * (width - 2 * padding) / (data.length - 1));
+                        const y = height - padding - ((d.tickets - minTickets) / ticketsRange * (height - 2 * padding));
+                        return `${x},${y}`;
+                    }).join(' ');
+                    
+                    return (
+                        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
+                            {/* Grid lines */}
+                            {[0, 1, 2, 3, 4].map(i => (
+                                <line key={i} x1={padding} y1={padding + i * (height - 2 * padding) / 4} x2={width - padding} y2={padding + i * (height - 2 * padding) / 4} className="chart-grid" />
+                            ))}
+                            
+                            {/* Line */}
+                            <polyline points={points} className="line-path" />
+                            
+                            {/* Points */}
+                            {data.map((d, i) => {
+                                const x = padding + (i * (width - 2 * padding) / (data.length - 1));
+                                const y = height - padding - ((d.tickets - minTickets) / ticketsRange * (height - 2 * padding));
+                                return (
+                                    <g key={i}>
+                                        <circle cx={x} cy={y} r="5" fill="#3b82f6" />
+                                        <text x={x} y={height - 5} textAnchor="middle" fontSize="12" fill="#6b7280">{d.month}</text>
+                                        <text x={x} y={y - 10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#374151">{d.tickets}</text>
+                                    </g>
+                                );
+                            })}
+                        </svg>
+                    );
+                };
+
+                // Resolution Time Bar Chart
+                const ResolutionChart = ({ data }) => {
+                    const maxValue = Math.max(...data.map(d => d.resolution));
+                    const colors = ['#ef4444', '#f59e0b', '#10b981'];
+                    
+                    return (
+                        <div className="bar-chart">
+                            {data.map((item, idx) => (
+                                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div 
+                                        className="bar" 
+                                        style={{ 
+                                            height: `${(item.resolution / maxValue) * 180}px`,
+                                            background: `linear-gradient(to top, ${colors[idx]}, ${colors[idx]}dd)`
+                                        }}
+                                    >
+                                        <div className="bar-value">{item.resolution}h</div>
+                                    </div>
+                                    <div className="bar-label">{item.month}</div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                };
 
                 const Dashboard = () => {
                     const [activeView, setActiveView] = useState('ops');
@@ -221,7 +331,7 @@
                                             </div>
                                         </div>
 
-                                        {/* SLA & Charts */}
+                                        {/* SLA & Team Workload */}
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="bg-white p-6 rounded-lg shadow-md">
                                                 <h2 className="text-xl font-bold mb-4">⏰ SLA Performance</h2>
@@ -254,22 +364,17 @@
                                             </div>
 
                                             <div className="bg-white p-6 rounded-lg shadow-md">
-                                                <h2 className="text-xl font-bold mb-4">👥 Team Workload</h2>
-                                                <ResponsiveContainer width="100%" height={250}>
-                                                    <BarChart data={ticketData.teamWorkload}>
-                                                        <CartesianGrid strokeDasharray="3 3" />
-                                                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                                                        <YAxis />
-                                                        <Tooltip />
-                                                        <Bar dataKey="tickets" fill="#8b5cf6" />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
+                                                <h2 className="text-xl font-bold mb-4">👥 Team Workload Distribution</h2>
+                                                <BarChart data={ticketData.teamWorkload} />
+                                                <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm">
+                                                    <span className="font-semibold">⚠️ Action:</span> Rebalance 3 tickets from Tech B to Tech C
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Top Issues */}
                                         <div className="bg-white p-6 rounded-lg shadow-md">
-                                            <h2 className="text-xl font-bold mb-4">🔥 Top 5 Recurring Issues</h2>
+                                            <h2 className="text-xl font-bold mb-4">🔥 Top 5 Recurring Issues (Last 30 Days)</h2>
                                             <div className="space-y-3">
                                                 {ticketData.topIssues.map((issue, idx) => (
                                                     <div key={idx} className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded flex justify-between items-center">
@@ -301,54 +406,65 @@
                                         {/* System Health */}
                                         <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg shadow-md border-l-4 border-green-500">
                                             <h2 className="text-2xl font-bold mb-4">✅ Overall IT Status: HEALTHY</h2>
-                                            <p className="text-green-700 mb-4">All systems operating normally - 99.7% uptime</p>
+                                            <p className="text-green-700 mb-4">All systems operating normally - 99.7% uptime (30 days)</p>
                                             <div className="grid grid-cols-5 gap-4">
                                                 {executiveData.uptime.map((sys) => (
                                                     <div key={sys.system} className="bg-white p-4 rounded-lg shadow-sm">
-                                                        <div className="text-sm text-gray-600">{sys.system}</div>
+                                                        <div className="text-sm text-gray-600 mb-1">{sys.system}</div>
                                                         <div className="text-2xl font-bold text-green-600">{sys.uptime}%</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
+                                        {/* Metrics Cards */}
+                                        <div className="grid grid-cols-4 gap-4">
+                                            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                                                <div className="text-sm text-gray-600 mb-2">📊 Help Desk Tickets</div>
+                                                <div className="text-3xl font-bold text-gray-900">138</div>
+                                                <div className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                                                    <span>↓ 9%</span> <span className="text-gray-500">from last month</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+                                                <div className="text-sm text-gray-600 mb-2">⏰ Avg Resolution</div>
+                                                <div className="text-3xl font-bold text-gray-900">18.5 hrs</div>
+                                                <div className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                                                    <span>↓ 12%</span> <span className="text-gray-500">improving</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+                                                <div className="text-sm text-gray-600 mb-2">⭐ User Satisfaction</div>
+                                                <div className="text-3xl font-bold text-gray-900">4.5/5</div>
+                                                <div className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                                                    <span>↑ 7%</span> <span className="text-gray-500">up from 4.2</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+                                                <div className="text-sm text-gray-600 mb-2">🚨 Critical Incidents</div>
+                                                <div className="text-3xl font-bold text-green-600">0</div>
+                                                <div className="text-sm text-gray-500 mt-1">Zero this month!</div>
+                                            </div>
+                                        </div>
+
                                         {/* Charts */}
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="bg-white p-6 rounded-lg shadow-md">
-                                                <h2 className="text-xl font-bold mb-4">📈 Service Quality Trends</h2>
-                                                <ResponsiveContainer width="100%" height={250}>
-                                                    <LineChart data={executiveData.trends}>
-                                                        <CartesianGrid strokeDasharray="3 3" />
-                                                        <XAxis dataKey="month" />
-                                                        <YAxis yAxisId="left" />
-                                                        <YAxis yAxisId="right" orientation="right" />
-                                                        <Tooltip />
-                                                        <Legend />
-                                                        <Line yAxisId="left" type="monotone" dataKey="tickets" stroke="#3b82f6" strokeWidth={2} name="Tickets" />
-                                                        <Line yAxisId="right" type="monotone" dataKey="satisfaction" stroke="#10b981" strokeWidth={2} name="Satisfaction" />
-                                                    </LineChart>
-                                                </ResponsiveContainer>
-                                                <div className="mt-3 text-sm text-center text-gray-600">✅ Tickets down 9% | Satisfaction up 7%</div>
+                                                <h2 className="text-xl font-bold mb-4">📈 Ticket Volume Trend (90 Days)</h2>
+                                                <LineChart data={executiveData.trends} />
+                                                <div className="mt-3 text-sm text-center text-gray-600">✅ Tickets trending down | Quality improving</div>
                                             </div>
 
                                             <div className="bg-white p-6 rounded-lg shadow-md">
                                                 <h2 className="text-xl font-bold mb-4">⏱️ Resolution Time Trend</h2>
-                                                <ResponsiveContainer width="100%" height={250}>
-                                                    <BarChart data={executiveData.trends}>
-                                                        <CartesianGrid strokeDasharray="3 3" />
-                                                        <XAxis dataKey="month" />
-                                                        <YAxis />
-                                                        <Tooltip />
-                                                        <Bar dataKey="resolution" fill="#8b5cf6" name="Avg Resolution (hrs)" />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
+                                                <ResolutionChart data={executiveData.trends} />
                                                 <div className="mt-3 text-sm text-center text-gray-600">✅ Improved 12% over 90 days</div>
                                             </div>
                                         </div>
 
                                         {/* Projects */}
                                         <div className="bg-white p-6 rounded-lg shadow-md">
-                                            <h2 className="text-xl font-bold mb-4">📅 Current Projects</h2>
+                                            <h2 className="text-xl font-bold mb-4">📅 Current Priorities & Projects</h2>
                                             <div className="space-y-4">
                                                 {executiveData.projects.map((proj, idx) => (
                                                     <div key={idx} className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded">
@@ -365,24 +481,58 @@
                                             </div>
                                         </div>
 
-                                        {/* Risk */}
-                                        <div className="bg-white p-6 rounded-lg shadow-md">
-                                            <h2 className="text-xl font-bold mb-4">⚠️ Risks & Decisions</h2>
-                                            <div className="space-y-4">
-                                                <div className="border-l-4 border-red-500 pl-4 py-3 bg-red-50 rounded">
-                                                    <div className="font-semibold text-red-600">🔴 HIGH PRIORITY</div>
-                                                    <div className="mt-2 text-sm">
-                                                        <div className="font-semibold">VPN Connection Reliability</div>
-                                                        <div className="text-gray-700">18 incidents. Hardware at 92% capacity.</div>
-                                                        <div className="mt-1"><strong>Decision needed by:</strong> November 3</div>
+                                        {/* Risks & Financial */}
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="bg-white p-6 rounded-lg shadow-md">
+                                                <h2 className="text-xl font-bold mb-4">⚠️ Risks & Decisions Needed</h2>
+                                                <div className="space-y-4">
+                                                    <div className="border-l-4 border-red-500 pl-4 py-3 bg-red-50 rounded">
+                                                        <div className="font-semibold text-red-600">🔴 HIGH PRIORITY</div>
+                                                        <div className="mt-2 text-sm">
+                                                            <div className="font-semibold">VPN Connection Reliability Issues</div>
+                                                            <div className="text-gray-700 mt-1">18 incidents affecting remote work. Hardware at 92% capacity.</div>
+                                                            <div className="mt-2"><span className="font-medium">Recommendation:</span> Replace with next-gen solution ($18K, 4-week lead time)</div>
+                                                            <div className="mt-1 text-red-600 font-semibold">Decision needed by: November 3</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="border-l-4 border-yellow-500 pl-4 py-3 bg-yellow-50 rounded">
+                                                        <div className="font-semibold text-yellow-600">⚠️ MEDIUM PRIORITY</div>
+                                                        <div className="mt-2 text-sm">
+                                                            <div className="font-semibold">Office 365 License Renewal</div>
+                                                            <div className="text-gray-700 mt-1">Due Dec 15 ($18K annual). 3-year option saves 12% ($6,480 total).</div>
+                                                            <div className="mt-1 text-yellow-700 font-semibold">Decision needed by: November 15</div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="border-l-4 border-yellow-500 pl-4 py-3 bg-yellow-50 rounded">
-                                                    <div className="font-semibold text-yellow-600">⚠️ MEDIUM PRIORITY</div>
-                                                    <div className="mt-2 text-sm">
-                                                        <div className="font-semibold">Office 365 Renewal</div>
-                                                        <div className="text-gray-700">Due Dec 15. 3-year option saves $6,480.</div>
-                                                        <div className="mt-1"><strong>Decision needed by:</strong> November 15</div>
+                                            </div>
+
+                                            <div className="bg-white p-6 rounded-lg shadow-md">
+                                                <h2 className="text-xl font-bold mb-4">💰 Financial Summary - October 2025</h2>
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between py-2 border-b">
+                                                        <span className="text-gray-700">Operational Expenses</span>
+                                                        <span className="font-semibold">$12,450</span>
+                                                    </div>
+                                                    <div className="flex justify-between py-2 border-b">
+                                                        <span className="text-gray-700">Project Spending</span>
+                                                        <span className="font-semibold">$3,200</span>
+                                                    </div>
+                                                    <div className="flex justify-between py-2 border-b">
+                                                        <span className="text-gray-700">Unplanned/Emergency</span>
+                                                        <span className="font-semibold text-green-600">$0</span>
+                                                    </div>
+                                                    <div className="flex justify-between py-3 border-t-2 border-gray-300">
+                                                        <span className="font-bold text-lg">Total Month-to-Date</span>
+                                                        <span className="font-bold text-2xl text-blue-600">$15,650</span>
+                                                    </div>
+                                                    
+                                                    <div className="bg-blue-50 p-4 rounded-lg">
+                                                        <div className="flex justify-between mb-2">
+                                                            <span className="font-semibold">Annual Budget Used</span>
+                                                            <span className="text-2xl font-bold text-blue-600">72%</span>
+                                                        </div>
+                                                        <ProgressBar value={72} color="blue" />
+                                                        <div className="text-sm text-gray-600 mt-2 text-center">✅ Q4 tracking as expected</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -393,7 +543,7 @@
                                 {activeView === 'data' && (
                                     <div className="bg-white p-6 rounded-lg shadow-md">
                                         <h2 className="text-xl font-bold mb-4">📋 Dashboard Data & Formulas</h2>
-                                        <p className="text-gray-600 mb-6">Excel/Google Sheets formulas used to calculate dashboard metrics</p>
+                                        <p className="text-gray-600 mb-6">Production-ready Excel/Google Sheets formulas used to calculate all dashboard metrics</p>
                                         <div className="overflow-x-auto">
                                             <table className="w-full border-collapse">
                                                 <thead>
@@ -418,14 +568,24 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                                            <h3 className="font-bold mb-2">Implementation Notes</h3>
-                                            <ul className="text-sm space-y-1">
-                                                <li>✅ All formulas production-ready and tested</li>
-                                                <li>✅ Compatible with Excel, Google Sheets, and BI tools</li>
-                                                <li>✅ Can be automated via ticketing system API</li>
-                                                <li>✅ Formulas update automatically with new data</li>
-                                            </ul>
+                                        <div className="mt-6 grid grid-cols-2 gap-6">
+                                            <div className="bg-blue-50 p-4 rounded-lg">
+                                                <h3 className="font-bold mb-2">Formula Explanations</h3>
+                                                <div className="text-sm space-y-2">
+                                                    <div><span className="font-mono bg-white px-2 py-1 rounded">COUNTIF</span> - Counts cells meeting criteria</div>
+                                                    <div><span className="font-mono bg-white px-2 py-1 rounded">AVERAGE</span> - Calculates mean of values</div>
+                                                    <div><span className="font-mono bg-white px-2 py-1 rounded">SUM</span> - Adds values together</div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-green-50 p-4 rounded-lg">
+                                                <h3 className="font-bold mb-2">Implementation Notes</h3>
+                                                <ul className="text-sm space-y-1">
+                                                    <li>✅ All formulas production-ready and tested</li>
+                                                    <li>✅ Compatible with Excel, Google Sheets, BI tools</li>
+                                                    <li>✅ Can be automated via API exports</li>
+                                                    <li>✅ Updates automatically with new data</li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -449,21 +609,10 @@
 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                const errorDiv = document.getElementById('error');
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `
-                    <div class="error">
-                        <h2>Error Loading Dashboard</h2>
-                        <p>An error occurred: ${error.message}</p>
-                        <p>Please refresh the page or check the browser console for details.</p>
-                        <button onclick="location.reload()" style="background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                            Retry
-                        </button>
-                    </div>
-                `;
+                alert('Error loading dashboard: ' + error.message);
                 console.error('Dashboard error:', error);
             }
-        }, 1000);
+        }, 500);
     </script>
 </body>
 </html>
