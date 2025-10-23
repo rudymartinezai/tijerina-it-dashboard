@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
-  <meta charset="utf-8">
-  <title>IT Dashboard (Native)</title>
+  <meta charset="utf-8" />
+  <title>IT Director Dashboard – Tijerina Legal Group PC</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,31 +12,56 @@
     <script>
       const { useState } = React;
 
-      function BarChart({ data }) {
-        const max = Math.max(...data.map(d => d.value));
+      /* ---------- Utility Components ---------- */
+      function StatCard({ title, value, status }) {
+        const color =
+          status === "good"
+            ? "text-green-600"
+            : status === "warn"
+            ? "text-yellow-600"
+            : "text-red-600";
         return React.createElement(
-          'svg',
-          { width: 300, height: 150, className: 'mx-auto' },
+          "div",
+          { className: "bg-white p-6 rounded-xl shadow-md text-center" },
+          React.createElement(
+            "h3",
+            { className: "text-gray-500 text-sm font-semibold mb-2 uppercase" },
+            title
+          ),
+          React.createElement(
+            "p",
+            { className: `text-3xl font-bold ${color}` },
+            value
+          )
+        );
+      }
+
+      function BarChart({ data }) {
+        const max = Math.max(...data.map((d) => d.value));
+        return React.createElement(
+          "svg",
+          { width: "100%", height: 150, viewBox: "0 0 350 150" },
           data.map((d, i) =>
-            React.createElement('rect', {
+            React.createElement("rect", {
               key: i,
-              x: i * 70 + 20,
+              x: i * 70 + 25,
               y: 140 - (d.value / max) * 100,
               width: 40,
               height: (d.value / max) * 100,
-              fill: '#3b82f6'
+              rx: 4,
+              fill: "#3b82f6",
             })
           ),
           data.map((d, i) =>
             React.createElement(
-              'text',
+              "text",
               {
-                key: 'label-' + i,
-                x: i * 70 + 40,
+                key: "lbl" + i,
+                x: i * 70 + 45,
                 y: 145,
-                textAnchor: 'middle',
+                textAnchor: "middle",
                 fontSize: 12,
-                fill: '#4b5563'
+                fill: "#4b5563",
               },
               d.label
             )
@@ -44,73 +69,217 @@
         );
       }
 
+      function LineChart({ data }) {
+        const max = Math.max(...data.map((d) => d.value));
+        const points = data
+          .map(
+            (d, i) =>
+              `${i * (300 / (data.length - 1)) + 25},${
+                120 - (d.value / max) * 100
+              }`
+          )
+          .join(" ");
+        return React.createElement(
+          "svg",
+          { width: "100%", height: 150, viewBox: "0 0 350 150" },
+          React.createElement("polyline", {
+            fill: "none",
+            stroke: "#10b981",
+            strokeWidth: 3,
+            points,
+          }),
+          data.map((d, i) =>
+            React.createElement("circle", {
+              key: i,
+              cx: i * (300 / (data.length - 1)) + 25,
+              cy: 120 - (d.value / max) * 100,
+              r: 4,
+              fill: "#10b981",
+            })
+          ),
+          data.map((d, i) =>
+            React.createElement(
+              "text",
+              {
+                key: "lbl" + i,
+                x: i * (300 / (data.length - 1)) + 25,
+                y: 140,
+                textAnchor: "middle",
+                fontSize: 12,
+                fill: "#4b5563",
+              },
+              d.label
+            )
+          )
+        );
+      }
+
+      /* ---------- Dashboard ---------- */
       function Dashboard() {
-        const [tab, setTab] = useState('ops');
-        const dataSets = {
-          ops: [
-            { label: 'P1', value: 3 },
-            { label: 'P2', value: 6 },
-            { label: 'P3', value: 10 },
-            { label: 'P4', value: 4 }
-          ],
-          exec: [
-            { label: 'Q1', value: 25 },
-            { label: 'Q2', value: 40 },
-            { label: 'Q3', value: 32 },
-            { label: 'Q4', value: 50 }
-          ]
-        };
+        const [tab, setTab] = useState("ops");
+
+        const ticketData = [
+          { label: "P1", value: 3 },
+          { label: "P2", value: 6 },
+          { label: "P3", value: 10 },
+          { label: "P4", value: 4 },
+        ];
+
+        const slaData = [
+          { label: "Mon", value: 98 },
+          { label: "Tue", value: 95 },
+          { label: "Wed", value: 97 },
+          { label: "Thu", value: 99 },
+          { label: "Fri", value: 96 },
+        ];
+
+        const stats = [
+          { title: "Uptime", value: "99.9%", status: "good" },
+          { title: "Incidents", value: "1", status: "good" },
+          { title: "Tickets Open", value: "23", status: "warn" },
+          { title: "SLA Breaches", value: "0", status: "good" },
+        ];
 
         const Header = React.createElement(
-          'div',
-          { className: 'bg-blue-700 text-white py-6 text-center shadow-md' },
-          React.createElement('h1', { className: 'text-3xl font-bold' }, 'IT Dashboard (Native)'),
-          React.createElement('p', { className: 'text-blue-200 mt-2' }, 'No Libraries | Pure React + Tailwind + SVG')
+          "div",
+          { className: "bg-blue-700 text-white py-6 text-center shadow-md" },
+          React.createElement(
+            "h1",
+            { className: "text-3xl font-bold" },
+            "Tijerina Legal Group PC – IT Dashboard"
+          ),
+          React.createElement(
+            "p",
+            { className: "text-blue-200 mt-2" },
+            "Director Test Assignment | React + Tailwind + SVG"
+          )
         );
 
         const Tabs = React.createElement(
-          'div',
-          { className: 'flex justify-center bg-white shadow-sm' },
-          ['ops', 'exec'].map(t =>
+          "div",
+          { className: "flex justify-center bg-white shadow-sm" },
+          ["ops", "exec", "data"].map((t) =>
             React.createElement(
-              'button',
+              "button",
               {
                 key: t,
                 onClick: () => setTab(t),
                 className:
-                  'px-6 py-4 font-semibold border-b-2 transition ' +
+                  "px-6 py-4 font-semibold border-b-2 transition " +
                   (tab === t
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900')
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"),
               },
-              t === 'ops' ? 'Operations' : 'Executive'
+              t === "ops"
+                ? "Operations"
+                : t === "exec"
+                ? "Executive"
+                : "Data & Trends"
             )
           )
         );
 
-        const Content = React.createElement(
-          'div',
-          { className: 'max-w-5xl mx-auto p-6 space-y-6' },
+        const OpsView = React.createElement(
+          "div",
+          { className: "space-y-6" },
           React.createElement(
-            'div',
-            { className: 'bg-white p-6 rounded-lg shadow-md text-center' },
-            React.createElement('h2', { className: 'text-xl font-bold mb-4 text-blue-600' },
-              tab === 'ops' ? 'Open Tickets by Severity' : 'Quarterly Performance'),
-            React.createElement(BarChart, { data: dataSets[tab] })
+            "div",
+            { className: "grid grid-cols-2 md:grid-cols-4 gap-4" },
+            stats.map((s, i) =>
+              React.createElement(StatCard, {
+                key: i,
+                title: s.title,
+                value: s.value,
+                status: s.status,
+              })
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+            React.createElement(
+              "h2",
+              { className: "text-xl font-bold mb-4 text-blue-600" },
+              "Open Tickets by Severity"
+            ),
+            React.createElement(BarChart, { data: ticketData })
+          )
+        );
+
+        const ExecView = React.createElement(
+          "div",
+          { className: "space-y-6" },
+          React.createElement(
+            "div",
+            { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+            React.createElement(
+              "h2",
+              { className: "text-xl font-bold mb-4 text-green-600" },
+              "Weekly SLA Compliance"
+            ),
+            React.createElement(LineChart, { data: slaData })
+          ),
+          React.createElement(
+            "div",
+            { className: "grid grid-cols-2 md:grid-cols-4 gap-4" },
+            stats.map((s, i) =>
+              React.createElement(StatCard, {
+                key: "ex" + i,
+                title: s.title,
+                value: s.value,
+                status: s.status,
+              })
+            )
+          )
+        );
+
+        const DataView = React.createElement(
+          "div",
+          { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+          React.createElement(
+            "h2",
+            { className: "text-xl font-bold mb-2 text-purple-600" },
+            "Data Tables & Formulas"
+          ),
+          React.createElement(
+            "p",
+            { className: "text-gray-600" },
+            "This area would contain spreadsheet data or query results exported from your systems."
           )
         );
 
         const Footer = React.createElement(
-          'div',
-          { className: 'bg-gray-800 text-white text-center py-6 mt-12' },
-          React.createElement('p', { className: 'text-gray-400' }, 'IT Director Test Assignment - Tijerina Legal Group PC'),
-          React.createElement('p', { className: 'text-gray-500 text-sm mt-2' }, 'All visuals rendered natively')
+          "div",
+          { className: "bg-gray-800 text-white text-center py-6 mt-12" },
+          React.createElement(
+            "p",
+            { className: "text-gray-400" },
+            "IT Director Test Assignment – Tijerina Legal Group PC"
+          ),
+          React.createElement(
+            "p",
+            { className: "text-gray-500 text-sm mt-2" },
+            "All visuals rendered natively – No external chart libraries"
+          )
         );
 
-        return React.createElement(React.Fragment, null, Header, Tabs, Content, Footer);
+        const Content = React.createElement(
+          "div",
+          { className: "max-w-6xl mx-auto p-6 space-y-6" },
+          tab === "ops" ? OpsView : tab === "exec" ? ExecView : DataView
+        );
+
+        return React.createElement(
+          React.Fragment,
+          null,
+          Header,
+          Tabs,
+          Content,
+          Footer
+        );
       }
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
+      const root = ReactDOM.createRoot(document.getElementById("root"));
       root.render(React.createElement(Dashboard));
     </script>
   </body>
