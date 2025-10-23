@@ -1,34 +1,81 @@
 <!doctype html>
 <html lang="en">
   <meta charset="utf-8">
-  <title>Dashboard Skeleton</title>
+  <title>IT Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <body class="bg-gray-100 min-h-screen">
     <div id="root"></div>
 
     <script>
       const { useState } = React;
 
       function Dashboard() {
-        const [count, setCount] = useState(0);
+        const [activeTab, setActiveTab] = useState('operations');
 
-        return React.createElement(
+        const Header = React.createElement(
           "div",
-          { className: "bg-white p-8 rounded-2xl shadow-lg text-center space-y-4" },
-          React.createElement("h1", { className: "text-2xl font-bold text-blue-600" }, "Dashboard Prototype"),
-          React.createElement("p", { className: "text-gray-600" }, `Click count: ${count}`),
-          React.createElement(
-            "button",
-            {
-              className: "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition",
-              onClick: () => setCount(count + 1)
-            },
-            "Click me"
+          { className: "bg-blue-700 text-white py-6 text-center shadow-md" },
+          React.createElement("h1", { className: "text-3xl font-bold" }, "IT Dashboard"),
+          React.createElement("p", { className: "text-blue-200 mt-2" }, "Tijerina Legal Group PC | React + Tailwind Edition")
+        );
+
+        const Tabs = React.createElement(
+          "div",
+          { className: "flex justify-center bg-white shadow-sm" },
+          ["operations", "executive", "data"].map(tab =>
+            React.createElement(
+              "button",
+              {
+                key: tab,
+                onClick: () => setActiveTab(tab),
+                className:
+                  "px-6 py-4 font-semibold border-b-2 transition " +
+                  (activeTab === tab
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900")
+              },
+              tab.charAt(0).toUpperCase() + tab.slice(1)
+            )
           )
         );
+
+        const Content = React.createElement(
+          "div",
+          { className: "max-w-5xl mx-auto p-6 space-y-6" },
+          activeTab === "operations" &&
+            React.createElement(
+              "div",
+              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+              React.createElement("h2", { className: "text-xl font-bold mb-2 text-blue-600" }, "IT Operations Overview"),
+              React.createElement("p", { className: "text-gray-600" }, "This section will include SLA, tickets, and workload data.")
+            ),
+          activeTab === "executive" &&
+            React.createElement(
+              "div",
+              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+              React.createElement("h2", { className: "text-xl font-bold mb-2 text-green-600" }, "Executive Snapshot"),
+              React.createElement("p", { className: "text-gray-600" }, "High-level metrics and financial overview will be shown here.")
+            ),
+          activeTab === "data" &&
+            React.createElement(
+              "div",
+              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+              React.createElement("h2", { className: "text-xl font-bold mb-2 text-purple-600" }, "Data & Formulas"),
+              React.createElement("p", { className: "text-gray-600" }, "Underlying data tables and calculation formulas.")
+            )
+        );
+
+        const Footer = React.createElement(
+          "div",
+          { className: "bg-gray-800 text-white text-center py-6 mt-12" },
+          React.createElement("p", { className: "text-gray-400" }, "IT Director Test Assignment - Tijerina Legal Group PC"),
+          React.createElement("p", { className: "text-gray-500 text-sm mt-2" }, "Interactive Dashboard | Sample data only")
+        );
+
+        return React.createElement(React.Fragment, null, Header, Tabs, Content, Footer);
       }
 
       const root = ReactDOM.createRoot(document.getElementById("root"));
