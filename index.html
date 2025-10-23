@@ -1,31 +1,39 @@
 <!doctype html>
 <html lang="en">
   <meta charset="utf-8">
-  <title>IT Dashboard</title>
+  <title>IT Dashboard Chart Test</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
 
   <body class="bg-gray-100 min-h-screen">
     <div id="root"></div>
 
     <script>
       const { useState } = React;
+      const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = Recharts;
 
       function Dashboard() {
-        const [activeTab, setActiveTab] = useState('operations');
+        const [activeTab, setActiveTab] = useState("operations");
+        const ticketData = [
+          { severity: "P1", count: 3 },
+          { severity: "P2", count: 6 },
+          { severity: "P3", count: 10 },
+          { severity: "P4", count: 4 }
+        ];
 
         const Header = React.createElement(
           "div",
           { className: "bg-blue-700 text-white py-6 text-center shadow-md" },
           React.createElement("h1", { className: "text-3xl font-bold" }, "IT Dashboard"),
-          React.createElement("p", { className: "text-blue-200 mt-2" }, "Tijerina Legal Group PC | React + Tailwind Edition")
+          React.createElement("p", { className: "text-blue-200 mt-2" }, "Tijerina Legal Group PC | Chart Test")
         );
 
         const Tabs = React.createElement(
           "div",
           { className: "flex justify-center bg-white shadow-sm" },
-          ["operations", "executive", "data"].map(tab =>
+          ["operations", "executive"].map(tab =>
             React.createElement(
               "button",
               {
@@ -42,30 +50,34 @@
           )
         );
 
-        const Content = React.createElement(
+        const OpsView = React.createElement(
           "div",
-          { className: "max-w-5xl mx-auto p-6 space-y-6" },
-          activeTab === "operations" &&
+          { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+          React.createElement("h2", { className: "text-xl font-bold mb-4 text-blue-600" }, "Open Tickets by Severity"),
+          React.createElement(
+            "div",
+            { className: "w-full h-64" },
             React.createElement(
-              "div",
-              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
-              React.createElement("h2", { className: "text-xl font-bold mb-2 text-blue-600" }, "IT Operations Overview"),
-              React.createElement("p", { className: "text-gray-600" }, "This section will include SLA, tickets, and workload data.")
-            ),
-          activeTab === "executive" &&
-            React.createElement(
-              "div",
-              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
-              React.createElement("h2", { className: "text-xl font-bold mb-2 text-green-600" }, "Executive Snapshot"),
-              React.createElement("p", { className: "text-gray-600" }, "High-level metrics and financial overview will be shown here.")
-            ),
-          activeTab === "data" &&
-            React.createElement(
-              "div",
-              { className: "bg-white p-6 rounded-lg shadow-md text-center" },
-              React.createElement("h2", { className: "text-xl font-bold mb-2 text-purple-600" }, "Data & Formulas"),
-              React.createElement("p", { className: "text-gray-600" }, "Underlying data tables and calculation formulas.")
+              ResponsiveContainer,
+              { width: "100%", height: "100%" },
+              React.createElement(
+                BarChart,
+                { data: ticketData },
+                React.createElement(CartesianGrid, { strokeDasharray: "3 3" }),
+                React.createElement(XAxis, { dataKey: "severity" }),
+                React.createElement(YAxis, null),
+                React.createElement(Tooltip, null),
+                React.createElement(Bar, { dataKey: "count", fill: "#3b82f6" })
+              )
             )
+          )
+        );
+
+        const ExecView = React.createElement(
+          "div",
+          { className: "bg-white p-6 rounded-lg shadow-md text-center" },
+          React.createElement("h2", { className: "text-xl font-bold mb-4 text-green-600" }, "Executive Snapshot"),
+          React.createElement("p", { className: "text-gray-600" }, "Charts and KPIs will appear here next.")
         );
 
         const Footer = React.createElement(
@@ -73,6 +85,12 @@
           { className: "bg-gray-800 text-white text-center py-6 mt-12" },
           React.createElement("p", { className: "text-gray-400" }, "IT Director Test Assignment - Tijerina Legal Group PC"),
           React.createElement("p", { className: "text-gray-500 text-sm mt-2" }, "Interactive Dashboard | Sample data only")
+        );
+
+        const Content = React.createElement(
+          "div",
+          { className: "max-w-5xl mx-auto p-6 space-y-6" },
+          activeTab === "operations" ? OpsView : ExecView
         );
 
         return React.createElement(React.Fragment, null, Header, Tabs, Content, Footer);
