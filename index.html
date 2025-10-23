@@ -1,21 +1,38 @@
 <!doctype html>
 <html lang="en">
   <meta charset="utf-8">
-  <title>React + Tailwind Test</title>
+  <title>Dashboard Skeleton</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <body class="bg-gray-100 flex items-center justify-center h-screen">
+
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div id="root"></div>
 
     <script>
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      const box = React.createElement(
-        'div',
-        { className: 'bg-white p-8 rounded-xl shadow-lg text-center' },
-        React.createElement('h1', { className: 'text-2xl font-bold text-blue-600' }, 'Tailwind + React works!')
-      );
-      root.render(box);
+      const { useState } = React;
+
+      function Dashboard() {
+        const [count, setCount] = useState(0);
+
+        return React.createElement(
+          "div",
+          { className: "bg-white p-8 rounded-2xl shadow-lg text-center space-y-4" },
+          React.createElement("h1", { className: "text-2xl font-bold text-blue-600" }, "Dashboard Prototype"),
+          React.createElement("p", { className: "text-gray-600" }, `Click count: ${count}`),
+          React.createElement(
+            "button",
+            {
+              className: "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition",
+              onClick: () => setCount(count + 1)
+            },
+            "Click me"
+          )
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(Dashboard));
     </script>
   </body>
 </html>
