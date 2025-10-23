@@ -1,16 +1,21 @@
 <!doctype html>
 <html lang="en">
   <meta charset="utf-8">
-  <title>React Test</title>
-  <body style="font-family: system-ui, sans-serif; padding: 24px">
+  <title>React + Tailwind Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div id="root"></div>
-
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
     <script>
       const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(React.createElement('h1', null, 'React works on GitHub Pages!'));
+      const box = React.createElement(
+        'div',
+        { className: 'bg-white p-8 rounded-xl shadow-lg text-center' },
+        React.createElement('h1', { className: 'text-2xl font-bold text-blue-600' }, 'Tailwind + React works!')
+      );
+      root.render(box);
     </script>
   </body>
 </html>
