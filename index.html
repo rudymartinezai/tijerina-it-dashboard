@@ -99,30 +99,47 @@
         );
       }
 
-      function LineChart({ data, w = 360, h = 160, color = "#10b981" }) {
-        const max = Math.max(...data.map(d => d.value), 1);
-        const step = (w - 40) / Math.max(1, data.length - 1);
-        const points = data.map((d, i) => {
-          const x = 20 + i * step;
-          const y = h - 30 - ((d.value / max) * (h - 60));
-          return x + "," + y;
-        }).join(" ");
-        return React.createElement(
-          "svg",
-          { viewBox: "0 0 " + w + " " + h, className: "w-full h-48" },
-          React.createElement("polyline", { fill: "none", stroke: color, strokeWidth: 3, points }),
-          data.map((d, i) => {
-            const x = 20 + i * step;
-            const y = h - 30 - ((d.value / max) * (h - 60));
-            return React.createElement("circle", { key: i, cx: x, cy: y, r: 4, fill: color });
-          }),
-          // x labels
-          data.map((d, i) => {
-            const x = 20 + i * step;
-            return React.createElement("text", { key: "lbl" + i, x, y: h - 12, textAnchor: "middle", fontSize: 11, fill: "#6b7280" }, d.label);
-          })
-        );
-      }
+function LineChart({ data, w = 360, h = 160, color = "#10b981" }) {
+  const max = Math.max(...data.map(d => d.value), 1);
+  const step = (w - 40) / Math.max(1, data.length - 1);
+  const margin = 20;
+  const height = h - 60;
+
+  const points = data.map((d, i) => {
+    const x = margin + i * step;
+    const y = h - 30 - ((d.value / max) * height);
+    return x + "," + y;
+  }).join(" ");
+
+  return React.createElement(
+    "svg",
+    { viewBox: "0 0 " + w + " " + h, className: "w-full h-48" },
+    // horizontal grid lines & y labels
+    Array.from({ length: 5 }).map((_, i) => {
+      const val = Math.round((max / 4) * i);
+      const y = h - 30 - (i * height) / 4;
+      return React.createElement(React.Fragment, { key: i },
+        React.createElement("line", { x1: margin, y1: y, x2: w - margin, y2: y, stroke: "#e5e7eb", strokeWidth: 1 }),
+        React.createElement("text", { x: 4, y: y + 4, fontSize: 10, fill: "#9ca3af" }, val)
+      );
+    }),
+    // line & points
+    React.createElement("polyline", { fill: "none", stroke: color, strokeWidth: 3, points }),
+    data.map((d, i) => {
+      const x = margin + i * step;
+      const y = h - 30 - ((d.value / max) * height);
+      return React.createElement(React.Fragment, { key: i },
+        React.createElement("circle", { cx: x, cy: y, r: 4, fill: color }),
+        React.createElement("text", { x, y: y - 8, textAnchor: "middle", fontSize: 11, fill: "#374151" }, d.value)
+      );
+    }),
+    // x labels
+    data.map((d, i) => {
+      const x = margin + i * step;
+      return React.createElement("text", { key: "lbl" + i, x, y: h - 12, textAnchor: "middle", fontSize: 11, fill: "#6b7280" }, d.label);
+    })
+  );
+}
 
       /* -------------------- Demo Data (modernized) -------------------- */
       const ticketData = {
