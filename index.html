@@ -53,6 +53,7 @@
             };
             return <span className={`inline-block ${className}`}>{icons[name] || '•'}</span>;
         };
+
         // Sample Data
         const ticketData = {
             bySeverity: [
@@ -144,22 +145,20 @@
             const StatusBadge = ({ status }) => {
                 const colors = {
                     good: 'bg-green-100 text-green-800',
+                    warning: 'bg-yellow-100 text-yellow-800',
+                    critical: 'bg-red-100 text-red-800'
+                };
+                return (
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[status] || colors.good}`}>
+                        {status === 'good' ? '✅' : status === 'warning' ? '⚠️' : '🔴'}
+                    </span>
+                );
+            };
 
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
-                        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-                            <div>
-                                <h1 className="text-3xl font-bold mb-2">Tijerina Legal Group PC - IT Dashboard</h1>
-                                <p className="text-blue-100">IT Director Test Assignment | Interactive Dashboard Demo</p>
-                            </div>
-                            <img 
-                                src="data:image/webp;base64,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" 
-                                alt="Tijerina Legal Group PC" 
-                                className="h-16 bg-white px-4 py-2 rounded-lg shadow-md"
-                                style={{ objectFit: 'contain' }}
-                            />
-                        </div>
-                    </div>
+            const ProgressBar = ({ value, max = 100, color = "blue" }) => {
+                const colorMap = {
+                    blue: 'bg-blue-600',
+                    green: 'bg-green-600',
                     purple: 'bg-purple-600'
                 };
                 return (
